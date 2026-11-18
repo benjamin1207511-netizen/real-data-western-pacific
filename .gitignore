@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Runtime data（数据库、云图帧、日志、导出）
+data/
+*.log
+
+# 本地浏览器 / 调试目录
+.browser*/
+.chrome*/
+.ref-chrome/

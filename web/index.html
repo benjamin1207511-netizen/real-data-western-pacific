@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="BAMC 风眼 TC WATCH：西北太平洋热带气旋实况监测，5°N–40°N / 100°E–160°E。" />
+  <title>BAMC 风眼 · TC WATCH | 西北太平洋热带气旋实况</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true">
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.4 11a8.5 8.5 0 1 0-2.2 6.1"/><path d="M20.5 4.6v6.2h-6.2"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 4.8v14.4c0 .8.9 1.3 1.6.9l11-7.2c.6-.4.6-1.3 0-1.7l-11-7.2C8.9 3.5 8 4 8 4.8z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4.2" height="15" rx="1.4"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.4"/></symbol>
+    <symbol id="i-zoom-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.4"/><path d="M15.8 15.8 21 21M11 8.2v5.6M8.2 11h5.6"/></symbol>
+    <symbol id="i-zoom-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.4"/><path d="M15.8 15.8 21 21M8.2 11h5.6"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5 12 4l7.5 6.5"/><path d="M6.5 9.5V20h11V9.5"/></symbol>
+  </svg>
+
+  <div id="app">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="BAMC 风眼 TC WATCH 首页">
+        <span class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="18" fill="#f5f9ff" stroke="#0066cc" stroke-width="2"/>
+            <path d="M6 24h36M24 6c8 9 8 27 0 36M24 6c-8 9-8 27 0 36M10 13.5c9 4 19 4 28 0M10 34.5c9-4 19-4 28 0" fill="none" stroke="#1e7bb8" stroke-width="1.1" opacity=".7"/>
+            <path d="M31.5 16.2c4.2 2.1 5.1 6.7 2.2 9.7-2.9 3-7.5 2.2-9.6-2.1" fill="none" stroke="#6b46c1" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="31.8" cy="16.8" r="2.1" fill="#2f9e44"/>
+          </svg>
+        </span>
+        <h1><span class="bamc">BAMC</span> <span class="ec">风眼 TC WATCH</span></h1>
+      </a>
+      <div class="top-right">
+        <div class="clock"><b id="utc-clock">--:--:--</b><span>UTC</span><i></i><b id="local-clock">--:--:--</b><span>CST</span></div>
+        <button id="refresh-btn" class="icon-button" type="button" title="刷新实况" aria-label="刷新实况"><svg><use href="#i-refresh"/></svg></button>
+        <button id="fullscreen-btn" class="icon-button" type="button" title="全屏" aria-label="全屏"><svg><use href="#i-expand"/></svg></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-text">
+          <span class="eyebrow">BAMC · TROPICAL CYCLONE WATCH</span>
+          <h2>风起西太，云图见风眼</h2>
+          <p>5°N–40°N · 100°E–160°E · 站点实况 / 卫星云图</p>
+        </div>
+        <div class="hero-actions">
+          <div class="hero-stats" id="hero-stats">
+            <span><b>—</b><small>站点</small></span>
+            <span><b>—</b><small>船报</small></span>
+            <span><b>—</b><small>浮标</small></span>
+          </div>
+          <button id="hero-refresh" class="primary" type="button"><svg><use href="#i-refresh"/></svg>刷新实况</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="side side-left" id="left-panel">
+          <section class="panel layer-panel">
+            <div class="panel-head">
+              <div><span class="eyebrow">MAP OVERLAYS</span><h3>图层</h3></div>
+              <span class="micro">LAYERS</span>
+            </div>
+            <label class="layer-row">
+              <span class="layer-name"><i class="swatch sat"></i>卫星云图</span>
+              <input type="checkbox" id="layer-sat" checked /><span class="switch"></span>
+            </label>
+            <div class="opacity-row">
+              <span>云图透明度</span>
+              <input type="range" id="sat-opacity" min="20" max="100" value="64" />
+              <b id="sat-opacity-label">64%</b>
+            </div>
+            <label class="layer-row">
+              <span class="layer-name"><i class="swatch wind"></i>站点风羽</span>
+              <input type="checkbox" id="layer-barbs" checked /><span class="switch"></span>
+            </label>
+            <label class="layer-row">
+              <span class="layer-name"><i class="swatch station"></i>地面 / 海上站</span>
+              <input type="checkbox" id="layer-stations" checked /><span class="switch"></span>
+            </label>
+            <div class="channel-row" id="channel-row">
+              <span>卫星通道</span>
+              <div class="segmented">
+                <button type="button" data-channel="visible" class="active">可见光</button>
+                <button type="button" data-channel="ir">红外</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel legend-panel">
+            <div class="panel-head compact">
+              <div><span class="eyebrow">READING</span><h3>图例</h3></div>
+            </div>
+            <div class="legend-block">
+              <span class="legend-title">24h 变压</span>
+              <div class="legend-scale dp-scale"></div>
+              <div class="legend-labels"><span>-20</span><span>-10</span><span>0</span><span>+10 hPa</span></div>
+            </div>
+            <div class="legend-block">
+              <span class="legend-title">站点类型</span>
+              <div class="legend-inline wrap">
+                <i class="dottype land"></i><span>陆地</span>
+                <i class="dottype airport"></i><span>机场</span>
+                <i class="dottype buoy"></i><span>浮标</span>
+                <i class="dottype ship"></i><span>船舶</span>
+                <i class="dottype drifter"></i><span>漂流浮标</span>
+                <i class="dottype pws"></i><span>PWS</span>
+                <i class="dottype satellite"></i><span>卫星</span>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <section class="panel map-panel">
+          <div class="panel-head map-panel-head">
+            <div class="map-heading">
+              <span class="eyebrow">LIVE SITUATION</span>
+              <h3 id="map-title">西北太平洋 · 实况</h3>
+              <span class="muted" id="map-subtitle">卫星云图 + 地面站 / 海上站</span>
+            </div>
+            <div class="panel-actions">
+              <span class="image-status ok" id="map-status"><i class="status-dot ok"></i> LIVE</span>
+              <div class="image-tools">
+                <button id="zoom-in" class="tool" type="button" title="放大" aria-label="放大"><svg><use href="#i-zoom-in"/></svg></button>
+                <button id="zoom-out" class="tool" type="button" title="缩小" aria-label="缩小"><svg><use href="#i-zoom-out"/></svg></button>
+                <button id="fit-domain" class="tool" type="button" title="回到监测范围" aria-label="回到监测范围"><svg><use href="#i-home"/></svg></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="map-stage">
+            <div id="map" aria-label="热带气旋实况地图"></div>
+            <div class="map-sat-badge" id="sat-badge">
+              <span class="sat-dot"></span>
+              <div><b id="sat-badge-title">卫星云图</b><small id="sat-badge-time">接入中</small></div>
+            </div>
+            <div class="map-tip" id="map-tip">点击站点查看 72h 曲线</div>
+          </div>
+
+          <footer class="timeline" id="timeline">
+            <div class="timeline-left">
+              <div class="transport">
+                <button id="prev-frame" class="step" type="button" aria-label="上一帧">‹</button>
+                <button id="play-btn" class="play" type="button" aria-label="播放卫星动画">
+                  <svg id="play-icon"><use href="#i-play"/></svg>
+                </button>
+                <button id="next-frame" class="step" type="button" aria-label="下一帧">›</button>
+              </div>
+              <div class="timeline-meta">
+                <span class="eyebrow">SATELLITE LOOP</span>
+                <strong id="timeline-time">—</strong>
+                <small id="timeline-sub">最近 3 小时 · 10 分钟帧</small>
+              </div>
+            </div>
+            <div class="timeline-track">
+              <div class="timeline-ticks" id="timeline-ticks"></div>
+              <input id="timeline-slider" type="range" min="0" max="0" value="0" step="1" />
+              <div class="timeline-labels" id="timeline-labels"></div>
+            </div>
+            <div class="timeline-right">
+              <div class="speed" id="speed">
+                <button type="button" data-speed="0.5">0.5×</button>
+                <button type="button" data-speed="1" class="active">1×</button>
+                <button type="button" data-speed="2">2×</button>
+              </div>
+              <span class="frame-count" id="frame-count">0 / 0</span>
+            </div>
+          </footer>
+        </section>
+
+        <aside class="side side-right" id="right-panel">
+          <section class="panel ranking-panel">
+            <div class="panel-head">
+              <div><span class="eyebrow">STATION RANKINGS</span><h3>站点排行</h3></div>
+            </div>
+            <div class="rank-tabs" id="rank-tabs">
+              <button type="button" data-metric="dp24" class="active">24h 降压</button>
+              <button type="button" data-metric="dt24">24h 变温</button>
+              <button type="button" data-metric="wind">大风</button>
+              <button type="button" data-metric="rain">强降水</button>
+            </div>
+            <div id="rank-list" class="rank-list">
+              <div class="skeleton rank-skeleton"></div>
+            </div>
+            <div class="rank-foot"><span id="rank-meta">按 24h 变压升序</span><span id="rank-updated"></span></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <nav class="mobile-nav" id="mobile-nav">
+      <button type="button" data-panel="rankings" class="active"><span>▥</span>排行</button>
+      <button type="button" data-panel="layers"><span>◈</span>图层</button>
+    </nav>
+  </div>
+
+  <div id="drawer-backdrop" class="drawer-backdrop"></div>
+  <aside id="station-drawer" class="station-drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div>
+        <span class="eyebrow">STATION DETAIL</span>
+        <h2 id="drawer-name">站点</h2>
+        <p id="drawer-meta">—</p>
+      </div>
+      <button id="drawer-close" class="icon-button" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="drawer-metrics" id="drawer-metrics"></div>
+    <div class="drawer-charts">
+      <div class="chart-card"><div class="chart-title"><b>气压</b><span>hPa · 72h</span></div><div id="chart-pressure" class="chart"></div></div>
+      <div class="chart-card"><div class="chart-title"><b>气温 / 湿度</b><span>°C · % · 72h</span></div><div id="chart-temp" class="chart"></div></div>
+      <div class="chart-card"><div class="chart-title"><b>风速 / 阵风</b><span>m/s · 72h</span></div><div id="chart-wind" class="chart"></div></div>
+      <div class="chart-card"><div class="chart-title"><b>降水</b><span>mm · 72h</span></div><div id="chart-rain" class="chart"></div></div>
+    </div>
+    <div class="drawer-foot" id="drawer-foot"></div>
+  </aside>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script src="/static/vendor/echarts.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
