@@ -2,9 +2,9 @@
 
 西北太平洋热带气旋实况监测平台，范围 **5°N–40°N，100°E–160°E**。浅色业务界面 + 深色地图视窗，站点、船舶、漂流浮标与卫星云图在同一屏内查看。
 
-![桌面端](docs/clean-final-ir.png)
+![桌面端](docs/auto-desktop2.png)
 
-![移动端](docs/clean-mobile-final.png)
+![移动端](docs/auto-mobile2.png)
 
 ---
 
@@ -17,6 +17,7 @@
 - **站点排行**：24h 降压、24h 变温、大风、强降水四个榜，点击定位并打开详情。
 - **站点详情**：72h 气压/气温/湿度/风速/阵风/降水曲线。
 - **卫星**：可见光/红外，3 小时 10 分钟帧动画，支持播放/暂停/0.5×/1×/2×、透明度。
+- **自动加载**：进入页面即读取当前最新实况，并在启动阶段静默重试；不设手动刷新按钮。
 - **自动重试**：所有源失败重试、保留上次成功数据；后台调度每 5–10 分钟更新。
 - **移动端**：地图全屏、底部抽屉、两个面板入口、站点详情全屏。
 
@@ -171,7 +172,6 @@ GET  /api/stations?limit=2200
 GET  /api/stations/{id}?hours=72
 GET  /api/rankings?metric=dp24|dt24|wind|rain
 GET  /api/satellite/frames?channel=ir|visible&hours=3
-POST /api/refresh
 GET  /api/health
 ```
 

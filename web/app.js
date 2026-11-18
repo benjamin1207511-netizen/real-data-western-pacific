@@ -100,7 +100,7 @@
   const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   async function api(path, opts = {}) {
-    const res = await fetch(path, { headers: { Accept: "application/json" }, ...opts });
+    const res = await fetch(path, { cache: "no-store", headers: { Accept: "application/json" }, ...opts });
     if (!res.ok) throw new Error(`${res.status} ${path}`);
     return res.json();
   }
@@ -1131,16 +1131,6 @@
     $("#layer-stations").addEventListener("change", renderStations);
     $("#drawer-close").addEventListener("click", closeDrawer);
     $("#drawer-backdrop").addEventListener("click", closeDrawer);
-    const refresh = async () => {
-      toast("已触发后台刷新，稍后自动更新");
-      try {
-        await api("/api/refresh", { method: "POST" });
-      } catch (err) {
-        toast("刷新请求失败");
-      }
-    };
-    $("#refresh-btn").addEventListener("click", refresh);
-    $("#hero-refresh").addEventListener("click", () => $("#refresh-btn").click());
     $("#fullscreen-btn").addEventListener("click", async () => {
       try {
         if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
@@ -1154,7 +1144,6 @@
         closeDrawer();
         closeMobilePanels();
       }
-      if (e.key.toLowerCase() === "r" && !e.ctrlKey && !e.metaKey) $("#refresh-btn").click();
     });
   }
 
@@ -1191,6 +1180,14 @@
     await loadOverview();
     await Promise.all([loadStations(), loadRankings(state.rankMetric)]);
     state.map.fitBounds([[DOMAIN.south, DOMAIN.west], [DOMAIN.north, DOMAIN.east]], { padding: [18, 18] });
+    // 进入页面时后端可能还在做首次回填；静默重试几次，用户不需要手动刷新。
+    let warmup = 0;
+    const warmupTimer = setInterval(async () => {
+      warmup += 1;
+      await loadOverview();
+      await Promise.all([loadStations(), loadRankings(state.rankMetric)]);
+      if (warmup >= 3) clearInterval(warmupTimer);
+    }, 10000);
     setInterval(() => {
       loadOverview();
       loadStations();

@@ -195,6 +195,25 @@ main {
   font-variant-numeric: tabular-nums;
 }
 .hero-stats small { color: var(--muted2); font-size: 9px; letter-spacing: .06em; }
+.auto-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 11px;
+  border: 1px solid #c7e5d2;
+  border-radius: 9px;
+  background: #f5fbf7;
+  color: #276749;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.auto-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(47, 158, 68, .12);
+}
 button.primary {
   display: inline-flex;
   align-items: center;
