@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: bamc-tc-watch
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      # 免费实例使用临时盘；升级到付费实例后可启用持久盘：
+      # - key: TCW_DATA_DIR
+      #   value: /var/data

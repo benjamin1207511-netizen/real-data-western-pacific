@@ -46,6 +46,45 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8787
 
 也可以双击 `start.bat`。
 
+## 在线部署
+
+这是一个 **FastAPI + SQLite + 后台采集** 的应用，不能直接放到 GitHub Pages（Pages 只能托管静态文件）。推荐用 Render 或 Railway 跑一个 Python Web Service。
+
+### 方案 A：Render（推荐，仓库里已带 `render.yaml`）
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/benjamin1207511-netizen/real-data-western-pacific)
+
+1. 点击上面的 **Deploy to Render**，登录 Render 并授权 GitHub。
+2. Render 会自动读取仓库根目录的 `render.yaml`，创建一个免费 Web Service。
+3. 构建完成后访问 `https://<service-name>.onrender.com`。
+
+免费实例的注意点：
+
+- 15 分钟无访问会休眠，首次唤醒需要几十秒。
+- 文件系统是临时的：SQLite 数据库和卫星帧在重新部署/重启后会重建；页面会自动重新采集。
+- 单实例运行；不要开多副本，否则每个副本都会各自跑后台采集。
+- 如果升级到付费实例，可挂载持久盘到 `/var/data`，并设置 `TCW_DATA_DIR=/var/data`。
+
+### 方案 B：Railway
+
+仓库根目录已带 `railway.json` 和 `Procfile`：
+
+1. 打开 [Railway](https://railway.com/new)，选择 **Deploy from GitHub repo**。
+2. 选择 `benjamin1207511-netizen/real-data-western-pacific`。
+3. Railway 会使用 Nixpacks 安装 `backend/requirements.txt`，启动：
+   `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+4. 在 Settings → Networking 生成公开域名。
+
+### 部署后检查
+
+- 健康检查：`https://<域名>/api/health` 应返回 `{"ok":true,...}`
+- 首页：`https://<域名>/`
+- 首次打开先等 30–60 秒，后台会回填 30h SYNOP 并生成卫星帧。
+
+### 关于 GitHub Pages
+
+GitHub Pages 只能运行 HTML/CSS/JS，不能运行 Python/FastAPI、SQLite 和后台定时采集，所以不能作为这个应用的完整在线部署。若只需要展示静态截图/说明，可以单独把 `docs/` 发布到 Pages，但那不是实时监测站。
+
 ### 数据目录
 
 首次启动会自动创建：
