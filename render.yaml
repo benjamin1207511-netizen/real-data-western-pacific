@@ -11,6 +11,14 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
+      - key: TCW_ENV
+        value: production
+      - key: TCW_TRUST_PROXY
+        value: "1"
+      - key: TCW_CHALLENGE
+        value: "1"
+      - key: TCW_SECRET
+        generateValue: true
       # 免费实例使用临时盘；升级到付费实例后可启用持久盘：
       # - key: TCW_DATA_DIR
       #   value: /var/data

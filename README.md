@@ -47,6 +47,38 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8787
 
 也可以双击 `start.bat`。
 
+## 反爬与访问保护
+
+已内置轻量反爬墙，不依赖第三方账号：
+
+- **JS Cookie 验证**：首次访问先完成一次安全校验，通过后 48 小时内免验证。
+- **爬虫 UA 拦截**：Python requests、curl、wget、Scrapy、扫描器等直接 403。
+- **IP 限速**：API 240 次/分钟、图片 600 次/分钟、静态资源 420 次/分钟。
+- **防盗链**：跨站加载 `/frames/` 图片会被拒绝。
+- **路径拦截**：`.env`、`.git`、`wp-admin`、`phpmyadmin` 等扫描路径 404。
+- **安全响应头**：`X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`、HSTS（HTTPS 时）。
+- **robots.txt**：禁止搜索引擎抓取。
+- 生产模式关闭 `/docs`、`/redoc`、`/openapi.json`；CORS 默认只允许同源。
+
+可用环境变量：
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `TCW_CHALLENGE` | `1` | 设为 `0` 可关闭 JS 验证 |
+| `TCW_SECRET` | 随机 | Cookie 签名密钥，生产环境务必固定 |
+| `TCW_TRUST_PROXY` | `0` | Render/Railway 前置代理时设为 `1` |
+| `TCW_ENV` | `development` | 设为 `production` 关闭 API 文档 |
+| `TCW_ALLOWED_ORIGINS` | 空 | 只有前后端分域时才需要填 |
+
+本地临时关闭验证：
+
+```powershell
+$env:TCW_CHALLENGE="0"
+start.bat
+```
+
+说明：应用层反爬主要拦截普通爬虫和滥用；面对大规模 DDoS 仍建议在 Render/Cloudflare 前面加一层 WAF。
+
 ## 在线部署
 
 这是一个 **FastAPI + SQLite + 后台采集** 的应用，不能直接放到 GitHub Pages（Pages 只能托管静态文件）。推荐用 Render 或 Railway 跑一个 Python Web Service。
