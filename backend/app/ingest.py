@@ -369,7 +369,18 @@ JOBS: list[tuple[str, int, Callable[[], Any]]] = [
 
 _running: dict[str, bool] = {}
 _scheduler_started = False
-_executor = ThreadPoolExecutor(max_workers=6, thread_name_prefix="tcw")
+# 6 个共享线程时，6 个外部源同时卡住就会把池占满，NMC/船舶/IMERG 也排不上。
+# 增加到 12，保证健康源仍能继续更新；同时启动时清理上次进程留下的 running。
+_executor = ThreadPoolExecutor(max_workers=12, thread_name_prefix="tcw")
+
+
+def _reset_stale_running() -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE source_status SET status='error', message='上次更新中断（进程重启）' "
+            "WHERE status='running'"
+        )
+        conn.commit()
 
 
 def _run_safe(name: str, fn: Callable[[], Any]) -> None:
@@ -406,6 +417,7 @@ def start_background() -> None:
     if _scheduler_started:
         return
     _scheduler_started = True
+    _reset_stale_running()
     # 首屏优先：台风、METAR、当前卫星帧先在后台跑。
     _executor.submit(_run_safe, "nmc", refresh_tc)
     _executor.submit(_run_safe, "metar", refresh_metar)

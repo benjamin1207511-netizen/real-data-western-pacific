@@ -79,6 +79,27 @@ start.bat
 
 说明：应用层反爬主要拦截普通爬虫和滥用；面对大规模 DDoS 仍建议在 Render/Cloudflare 前面加一层 WAF。
 
+### 自动更新排查
+
+如果页面一直不更新，先看 `https://<域名>/api/status`：
+
+- `generated_at` 是新的，但多个源 `status: running`、`last_success` 很旧：后台抓取线程卡住了。
+- NMC / 船舶（国内接口）正常，METAR / SYNOP / NDBC / Windy / GDP / 卫星（境外接口）同时卡住：优先检查服务器出站网络、DNS 或代理。
+- 在服务器上执行：
+
+```bash
+curl -I --max-time 8 https://aviationweather.gov
+curl -I --max-time 8 https://www.ogimet.com
+curl -I --max-time 8 https://ndbc.noaa.gov
+curl -I --max-time 8 https://node.windy.com
+curl -I --max-time 8 https://out-gdpsio.ucsd.edu
+curl -I --max-time 8 https://gibs.earthdata.nasa.gov
+getent hosts aviationweather.gov
+env | grep -i proxy
+```
+
+如果以上超时，给服务配置可用的 `HTTPS_PROXY` / `HTTP_PROXY`，或把服务迁到能直连这些站点的网络。仅重启应用不能修复被阻断的出站网络。
+
 ## 在线部署
 
 这是一个 **FastAPI + SQLite + 后台采集** 的应用，不能直接放到 GitHub Pages（Pages 只能托管静态文件）。推荐用 Render 或 Railway 跑一个 Python Web Service。
